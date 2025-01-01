@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Chatbot</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+        
+        <!-- Add the Outfit font from Google Fonts -->
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+
+        <style>
+            /* Apply Outfit font to the entire body */
+            * {
+                font-family: 'Outfit', sans-serif;
+            }
+
+            body {
+                background: rgb(96,143,149); /* Fallback for older browsers */
+                background: -moz-linear-gradient(-45deg, rgba(96,143,149,1) 0%, rgba(0,133,136,1) 9%, rgba(12,36,73,1) 52%, rgba(26,30,59,1) 100%); /* Firefox < 16 */
+                background: -webkit-linear-gradient(-45deg, rgba(96,143,149,1) 0%, rgba(0,133,136,1) 9%, rgba(12,36,73,1) 52%, rgba(26,30,59,1) 100%); /* Safari & Chrome 10-25 */
+                background: linear-gradient(135deg, rgba(96,143,149,1) 0%, rgba(0,133,136,1) 9%, rgba(12,36,73,1) 52%, rgba(26,30,59,1) 100%); /* Standard for modern browsers */
+                filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#608f95', endColorstr='#1a1e3b', GradientType=1);
+                background-size: cover;
+                background-repeat: no-repeat;
+                height: 100vh;
+                margin: 0;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 900px;
+                margin: 0 auto;
+            }
+
+            .fixed-panel {
+                min-height: 400px;
+                max-height: 400px;
+                background-color: #19313c;
+                color: white;
+                overflow: auto;
+            }
+
+            .panel {
+                margin-bottom: 20px;
+                background-color: #fff;
+                border: 6px solid transparent;
+                border-radius: 25px;
+                box-shadow: 0 1px 1px rgba(0,0,0,.05);
+            }
+
+            .panel-info {
+                border-color: #0c2735;
+            }
+
+            .panel-info>.panel-heading {
+                color: white;
+                background-color: #0c2735;
+                border-color: #0c2735;
+            }
+
+            .panel-footer {
+                padding: 10px 15px;
+                background-color: #0c2735;
+                border-top: 1px solid #0c2735;
+                border-bottom-right-radius: 3px;
+                border-bottom-left-radius: 3px;
+            }
+
+            h3 {
+                font-family: 'Outfit', sans-serif; /* Apply Outfit font to title */
+            }
+
+            /* Loading bubble styling */
+            .loading-bubble {
+                width: 25px;
+                height: 25px;
+                border-radius: 50%;
+                background: #0c2735;
+                margin: 0 5px;
+                animation: bounce 1.5s infinite ease-in-out;
+            }
+
+            @keyframes bounce {
+                0% { transform: scale(0.6); }
+                50% { transform: scale(1); }
+                100% { transform: scale(0.6); }
+            }
+
+            /* User and Bot message styling */
+            .user-message {
+                text-align: right;
+                color: #2EFE2E;
+            }
+
+            .bot-message {
+                color: white;
+                text-align: left;
+            }
+
+            /* Add User and Bot logos */
+            .user-logo, .bot-logo {
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                margin-right: 10px;
+                vertical-align: middle;
+            }
+
+            .user-logo {
+                background-color: #2EFE2E;
+            }
+
+            .bot-logo {
+                background-color: #fff;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <h3 class="text-center"><small><strong>Medical</strong></small><font color="white"> Q&A Assistant</font><small><strong> Powered by AI</strong></small></h3>
+
+                <div class="col-md-12">
+                    <div id="chatPanel" class="panel panel-info">
+                        <div class="panel-heading">
+                            <strong><span class="glyphicon glyphicon-globe"></span> Talk with Me !!! (You: Green / Bot: White) </strong>
+                        </div>
+                        <div class="panel-body fixed-panel">
+                            <ul class="media-list"></ul>
+                        </div>
+                        <div class="panel-footer">
+                            <form method="post" id="chatbot-form">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Enter Message" name="messageText" id="messageText" autofocus/>
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-info" type="button" id="chatbot-form-btn">Send</button>
+                                        <button class="btn btn-info" type="button" id="chatbot-form-btn-clear">Clear</button>
+                                    </span>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            $(function() {
+                // Send message button
+                $('#chatbot-form-btn').click(function(e) {
+                    e.preventDefault();
+                    $('#chatbot-form').submit();
+                });
+
+                // Clear chat button
+                $('#chatbot-form-btn-clear').click(function(e) {
+                    e.preventDefault();
+                    $('#chatPanel').find('.media-list').html('');
+                });
+
+                // Submit form when message is sent
+                $('#chatbot-form').submit(function(e) {
+                    e.preventDefault();
+                    var message = $('#messageText').val();
+                    
+                    // Display user message with logo
+                    $(".media-list").append('<li class="media"><div class="media-body"><div class="media"><div style="text-align:right; color : #2EFE2E" class="media-body"><img src="static/user.png" class="user-logo"> ' + message + '<hr/></div></div></div></li>');
+
+                    // Show loading bubble for bot response
+                    $(".media-list").append('<li class="media"><div class="media-body"><div class="media"><div style="color: white" class="media-body"><div class="loading-bubble"></div></div></div></div></li>');
+
+                    $.ajax({
+                        type: "POST",
+                        url: "/api/chat",
+                        data: { message: message },
+                        success: function(response) {
+                            $('#messageText').val('');
+                            var answer = response.response;
+
+                            // Remove loading bubble
+                            $(".media-list").find(".loading-bubble").parent().parent().remove();
+
+                            // Format the AI response
+                            answer = formatAIResponse(answer);
+
+                            // Display bot's response with logo
+                            $(".media-list").append('<li class="media"><div class="media-body"><div class="media"><div style="color: white" class="media-body"><img src="static/logo.png" class="bot-logo"> ' + answer + '<hr/></div></div></div></li>');
+
+                            $(".fixed-panel").stop().animate({ scrollTop: $(".fixed-panel")[0].scrollHeight}, 1000);
+                        },
+                        error: function(error) {
+                            console.log(error);
+                        }
+                    });
+                });
+            });
+
+            // Function to format the AI response
+            function formatAIResponse(response) {
+                // Convert **text** to bold
+                response = response.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+
+                // Convert *text* to italic
+                response = response.replace(/\*(.*?)\*/g, '<i>$1</i>');
+
+                // Convert bullet points - or * to <ul><li> for bullet points
+                response = response.replace(/^(?:-|\*)(.*)$/gm, '<ul><li>$1</li></ul>');
+                
+                return response;
+            }
+        </script>
+    </body>
+</html>

@@ -5,29 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liver Disease Prediction</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <script>
         // Function to fill the form with sample test cases
         function fillSampleData(sample) {
-            document.getElementById('Gender').value = sample.Gender;
-            document.getElementById('Age').value = sample.Age;
-            document.getElementById('Total_Bilirubin').value = sample.Total_Bilirubin;
-            document.getElementById('Direct_Bilirubin').value = sample.Direct_Bilirubin;
-            document.getElementById('Alkaline_Phosphotase').value = sample.Alkaline_Phosphotase;
-            document.getElementById('Alamine_Aminotransferase').value = sample.Alamine_Aminotransferase;
-            document.getElementById('Aspartate_Aminotransferase').value = sample.Aspartate_Aminotransferase;
-            document.getElementById('Total_Protiens').value = sample.Total_Protiens;
-            document.getElementById('Albumin').value = sample.Albumin;
-            document.getElementById('Albumin_and_Globulin_Ratio').value = sample.Albumin_and_Globulin_Ratio;
+            Object.entries(sample).forEach(([key, value]) => {
+                document.getElementById(key).value = value;
+            });
         }
 
-        // Function to handle form submission using AJAX
-        async function handleSubmit(event) {
+        // Function to handle form submission
+         async function handleSubmit(event) {
             event.preventDefault();  // Prevent the default form submission
 
             const formData = new FormData(event.target);
             const data = Object.fromEntries(formData.entries());
 
-            // Show loading message
+            // Show loading message and spinner
+            document.getElementById('loadingSpinner').classList.remove('hidden');
             document.getElementById('predictionResult').innerHTML = 'Loading... Please wait for a moment.';
 
             try {
@@ -43,88 +38,171 @@
                 setTimeout(async () => {
                     const result = await response.json();
 
+                    // Hide loading spinner
+                    document.getElementById('loadingSpinner').classList.add('hidden');
+                    
                     // Display the prediction result after the delay
                     const predictionResult = result.result || 'Error in prediction';
-                    document.getElementById('predictionResult').innerHTML = `Prediction: ${predictionResult}`;
+                    const resultElement = document.getElementById('predictionResult');
+
+                    // Change the color based on the prediction result (red for disease, green for no disease)
+                    if (predictionResult.toLowerCase().includes('disease')) {
+                        resultElement.innerHTML = `Prediction: ${predictionResult}`;
+                        resultElement.classList.remove('text-green-500');
+                        resultElement.classList.add('text-red-500');
+                    } else {
+                        resultElement.innerHTML = `Prediction: ${predictionResult}`;
+                        resultElement.classList.remove('text-red-500');
+                        resultElement.classList.add('text-green-500');
+                    }
                 }, 3000);  // 3-second delay before showing result
             } catch (error) {
                 console.error('Error:', error);
+
+                // Hide loading spinner
+                document.getElementById('loadingSpinner').classList.add('hidden');
+
                 document.getElementById('predictionResult').innerHTML = 'An error occurred. Please try again.';
             }
         }
     </script>
+    <style>
+        * {
+            font-family: 'Outfit', sans-serif;
+        }
+        body {
+            background-image: url("{{ url_for('static', filename='bg.jpg') }}");
+            background-size: cover; /* Ensures the background covers the entire page */
+            background-position: center; /* Keeps the background centered */
+            background-repeat: no-repeat; /* Prevents the background from repeating */
+            background-attachment: fixed; /* Ensures the background doesn't move when scrolling */
+            height: 100vh; /* Ensures the body takes full height of the viewport */
+            margin: 0; /* Removes default margin */
+        }
+        
+        .lds-hourglass,
+        .lds-hourglass:after {
+            box-sizing: border-box;
+        }
+
+        .lds-hourglass {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+
+        .lds-hourglass:after {
+            content: " ";
+            display: block;
+            border-radius: 50%;
+            width: 0;
+            height: 0;
+            margin: 8px;
+            box-sizing: border-box;
+            border: 32px solid currentColor;
+            border-color: currentColor transparent currentColor transparent;
+            animation: lds-hourglass 1.2s infinite;
+        }
+
+        @keyframes lds-hourglass {
+            0% {
+                transform: rotate(0);
+                animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+            }
+
+            50% {
+                transform: rotate(900deg);
+                animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+            }
+
+            100% {
+                transform: rotate(1800deg);
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white shadow-lg rounded-lg p-8 max-w-md w-full">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Liver Disease Prediction</h2>
-        <form id="predictForm" onsubmit="handleSubmit(event)">
-            <div class="mb-4">
-                <label for="Gender" class="block text-gray-700 font-semibold mb-2">Gender:</label>
-                <select id="Gender" name="Gender" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="Female">Female</option>
-                    <option value="Male">Male</option>
-                </select>
+<body class="flex items-center justify-start min-h-screen py-8 bg-gray-100">
+    <div class="w-700 max-w-xl bg-white shadow-lg rounded-lg p-5 ml-12">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Liver Disease Prediction</h1>
+        <form id="predictForm" onsubmit="handleSubmit(event)" class="space-y-6">
+            <!-- Form Fields -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="Gender" class="block text-gray-700 font-semibold mb-1">Gender</label>
+                    <select id="Gender" name="Gender" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="Age" class="block text-gray-700 font-semibold mb-1">Age</label>
+                    <input type="number" id="Age" name="Age" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="Total_Bilirubin" class="block text-gray-700 font-semibold mb-1">Total Bilirubin</label>
+                    <input type="number" step="0.01" id="Total_Bilirubin" name="Total_Bilirubin" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="Direct_Bilirubin" class="block text-gray-700 font-semibold mb-1">Direct Bilirubin</label>
+                    <input type="number" step="0.01" id="Direct_Bilirubin" name="Direct_Bilirubin" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="Alkaline_Phosphotase" class="block text-gray-700 font-semibold mb-1">Alkaline Phosphotase</label>
+                    <input type="number" id="Alkaline_Phosphotase" name="Alkaline_Phosphotase" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="Alamine_Aminotransferase" class="block text-gray-700 font-semibold mb-1">Alamine Aminotransferase</label>
+                    <input type="number" id="Alamine_Aminotransferase" name="Alamine_Aminotransferase" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="Aspartate_Aminotransferase" class="block text-gray-700 font-semibold mb-1">Aspartate Aminotransferase</label>
+                    <input type="number" id="Aspartate_Aminotransferase" name="Aspartate_Aminotransferase" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="Total_Protiens" class="block text-gray-700 font-semibold mb-1">Total Proteins</label>
+                    <input type="number" step="0.1" id="Total_Protiens" name="Total_Protiens" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="Albumin" class="block text-gray-700 font-semibold mb-1">Albumin</label>
+                    <input type="number" step="0.1" id="Albumin" name="Albumin" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="Albumin_and_Globulin_Ratio" class="block text-gray-700 font-semibold mb-1">Albumin and Globulin Ratio</label>
+                    <input type="number" step="0.1" id="Albumin_and_Globulin_Ratio" name="Albumin_and_Globulin_Ratio" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
             </div>
 
-            <div class="mb-4">
-                <label for="Age" class="block text-gray-700 font-semibold mb-2">Age:</label>
-                <input type="text" id="Age" name="Age" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <!-- Sample Buttons -->
+            <div class="flex flex-wrap gap-2 justify-between">
+                <button type="button" onclick="fillSampleData({Gender: 'Female', Age: 45, Total_Bilirubin: 1.2, Direct_Bilirubin: 0.3, Alkaline_Phosphotase: 110, Alamine_Aminotransferase: 34, Aspartate_Aminotransferase: 45, Total_Protiens: 6.5, Albumin: 3.8, Albumin_and_Globulin_Ratio: 1.2})" class="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600">Sample 1</button>
+                <button type="button" onclick="fillSampleData({Gender: 'Male', Age: 50, Total_Bilirubin: 1.4, Direct_Bilirubin: 0.5, Alkaline_Phosphotase: 120, Alamine_Aminotransferase: 40, Aspartate_Aminotransferase: 50, Total_Protiens: 7.0, Albumin: 3.9, Albumin_and_Globulin_Ratio: 1.3})" class="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600">Sample 2</button>
             </div>
 
-            <div class="mb-4">
-                <label for="Total_Bilirubin" class="block text-gray-700 font-semibold mb-2">Total Bilirubin:</label>
-                <input type="text" id="Total_Bilirubin" name="Total_Bilirubin" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-4">
-                <label for="Direct_Bilirubin" class="block text-gray-700 font-semibold mb-2">Direct Bilirubin:</label>
-                <input type="text" id="Direct_Bilirubin" name="Direct_Bilirubin" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-4">
-                <label for="Alkaline_Phosphotase" class="block text-gray-700 font-semibold mb-2">Alkaline Phosphotase:</label>
-                <input type="text" id="Alkaline_Phosphotase" name="Alkaline_Phosphotase" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-4">
-                <label for="Alamine_Aminotransferase" class="block text-gray-700 font-semibold mb-2">Alamine Aminotransferase:</label>
-                <input type="text" id="Alamine_Aminotransferase" name="Alamine_Aminotransferase" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-4">
-                <label for="Aspartate_Aminotransferase" class="block text-gray-700 font-semibold mb-2">Aspartate Aminotransferase:</label>
-                <input type="text" id="Aspartate_Aminotransferase" name="Aspartate_Aminotransferase" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-4">
-                <label for="Total_Protiens" class="block text-gray-700 font-semibold mb-2">Total Proteins:</label>
-                <input type="text" id="Total_Protiens" name="Total_Protiens" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-4">
-                <label for="Albumin" class="block text-gray-700 font-semibold mb-2">Albumin:</label>
-                <input type="text" id="Albumin" name="Albumin" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-4">
-                <label for="Albumin_and_Globulin_Ratio" class="block text-gray-700 font-semibold mb-2">Albumin and Globulin Ratio:</label>
-                <input type="text" id="Albumin_and_Globulin_Ratio" name="Albumin_and_Globulin_Ratio" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <!-- Sample buttons -->
-            <div class="mb-4 space-y-2">
-                <button type="button" onclick="fillSampleData({Gender: 'Female', Age: 45, Total_Bilirubin: 1.2, Direct_Bilirubin: 0.3, Alkaline_Phosphotase: 110, Alamine_Aminotransferase: 34, Aspartate_Aminotransferase: 45, Total_Protiens: 6.5, Albumin: 3.8, Albumin_and_Globulin_Ratio: 1.2})" class="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">Sample 1</button>
-                <button type="button" onclick="fillSampleData({Gender: 'Male', Age: 50, Total_Bilirubin: 1.4, Direct_Bilirubin: 0.5, Alkaline_Phosphotase: 120, Alamine_Aminotransferase: 40, Aspartate_Aminotransferase: 50, Total_Protiens: 7.0, Albumin: 3.9, Albumin_and_Globulin_Ratio: 1.3})" class="w-full bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500">Sample 2</button>
-                <button type="button" onclick="fillSampleData({Gender: 'Female', Age: 30, Total_Bilirubin: 0.9, Direct_Bilirubin: 0.1, Alkaline_Phosphotase: 100, Alamine_Aminotransferase: 30, Aspartate_Aminotransferase: 40, Total_Protiens: 6.0, Albumin: 3.5, Albumin_and_Globulin_Ratio: 1.1})" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">Sample 3</button>
-            </div>
-
-            <div class="flex justify-center mt-6">
-                <button type="submit" class="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">Predict</button>
+            <!-- Submit Button -->
+            <div class="text-center">
+                <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 w-full mt-1">Submit</button>
             </div>
         </form>
 
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="hidden flex justify-center items-center mt-4">
+            <div class="lds-hourglass"></div>
+        </div>
+
         <!-- Prediction Result -->
-        <div id="predictionResult" class="mt-4 text-center text-gray-700 font-semibold"></div>
+        <div id="predictionResult" class="text-center text-xl mt-4"></div>
+
+        
+        
     </div>
+    <div class="absolute top-4 right-4">
+        <a href="/chat" class="bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 w-full inline-block text-center">
+            <i class="fas fa-comment-alt mr-2"></i> <!-- Font Awesome Icon -->
+            Chat with AI
+        </a>
+    </div>
+    
+    
 </body>
 </html>
